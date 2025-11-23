@@ -2,6 +2,7 @@ import { createPublicClient, http, type Address, formatEther, parseEther } from 
 import { sepolia } from 'viem/chains';
 import { resolveWalletAddress } from './wallet';
 import { TARGET_CHAIN } from './chain';
+import WormholeTokenAbi from '$lib/abis/WormholeToken.json';
 
 /**
  * Create a public client for balance operations
@@ -41,6 +42,31 @@ export async function getBalanceForAddress(
 		};
 	} catch (error) {
 		console.error(`Failed to get balance for ${address}:`, error);
+		return null;
+	}
+}
+
+export async function getBalanceForERC20(
+	address: Address,
+	erc20Address: Address,
+): Promise<{ balance: bigint; formatted: string } | null> {
+	try {
+		const publicClient = getPublicClient();
+
+		const balance = await publicClient.readContract({
+			abi: WormholeTokenAbi.abi as any,
+			address: erc20Address,
+			functionName: 'balanceOf',
+			args: [address],
+		});
+
+		return {
+			balance: balance as bigint,
+			formatted: formatEther(balance as bigint),
+		}
+	}
+	catch (error) {
+		console.error(`Failed to get balance for ${address} on ${erc20Address}:`, error);
 		return null;
 	}
 }
@@ -116,6 +142,27 @@ export async function hasSufficientBalanceForAddress(
 		return false;
 	}
 }
+
+export async function hasSufficientBalanceForRC20(
+
+	address: Address,
+	erc20Address: Address,
+	requiredAmount: string | number
+): Promise<boolean> {
+	try {
+		const balanceData = await getBalanceForERC20(address, erc20Address);
+		if (!balanceData) {
+			return false;
+		}
+
+		const requiredWei = parseEther(requiredAmount.toString());
+		return balanceData.balance >= requiredWei;
+	} catch (error) {
+		console.error(`Failed to check sufficient balance for ${address} on ${erc20Address}:`, error);
+		return false
+	}
+}
+
 
 /**
  * Check if an address has sufficient balance

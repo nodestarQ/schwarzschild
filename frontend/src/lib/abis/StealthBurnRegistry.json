@@ -1,0 +1,56 @@
+{
+  "_format": "hh3-artifact-1",
+  "contractName": "StealthBurnRegistry",
+  "sourceName": "contracts/StealthBurnRegistry.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "ephemeralPublicKey",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "burnAddress",
+          "type": "address"
+        }
+      ],
+      "name": "StealthBurn",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "ephemeralPublicKey",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "address",
+          "name": "burnAddress",
+          "type": "address"
+        }
+      ],
+      "name": "emitBurn",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x6080604052348015600e575f5ffd5b5060ed8061001b5f395ff3fe6080604052348015600e575f5ffd5b50600436106026575f3560e01c80636b475e7914602a575b5f5ffd5b603960353660046080565b603b565b005b604080518381526001600160a01b03831660208201527fe6d615da9aa79dcd1ab6ccee8cb6a52341931a71096ecc0c11e5d71d81251ada910160405180910390a15050565b5f5f604083850312156090575f5ffd5b8235915060208301356001600160a01b038116811460ac575f5ffd5b80915050925092905056fea2646970667358221220e6b4c60e0c9e8235d4af0c3e0448f55f06447c5eb4c261b52ba37b0573ab377f64736f6c634300081c0033",
+  "deployedBytecode": "0x6080604052348015600e575f5ffd5b50600436106026575f3560e01c80636b475e7914602a575b5f5ffd5b603960353660046080565b603b565b005b604080518381526001600160a01b03831660208201527fe6d615da9aa79dcd1ab6ccee8cb6a52341931a71096ecc0c11e5d71d81251ada910160405180910390a15050565b5f5f604083850312156090575f5ffd5b8235915060208301356001600160a01b038116811460ac575f5ffd5b80915050925092905056fea2646970667358221220e6b4c60e0c9e8235d4af0c3e0448f55f06447c5eb4c261b52ba37b0573ab377f64736f6c634300081c0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {},
+  "immutableReferences": {},
+  "inputSourceName": "project/contracts/StealthBurnRegistry.sol",
+  "buildInfoId": "solc-0_8_28-2f9871c8a87bfdcaef3363a2d80030f57d2544c6"
+}

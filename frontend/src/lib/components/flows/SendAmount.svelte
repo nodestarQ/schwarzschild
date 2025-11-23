@@ -7,8 +7,8 @@
     AlertDescription,
   } from "$lib/components/ui/alert";
   import {
-    getBalanceForAddress,
-    hasSufficientBalanceForAddress,
+    getBalanceForERC20,
+    hasSufficientBalanceForRC20,
   } from "$lib/utils/balance";
   import {
     isConnectedToTargetChain,
@@ -19,6 +19,7 @@
   import type { Address } from "viem";
   import { AlertCircle, Info, AlertTriangle } from "@lucide/svelte";
   import { formatAddressForDisplay } from "$lib/utils/wallet";
+  import { ERC20_WORMHOLE_TOKEN } from "$lib/constants";
 
   interface Props {
     recipientAddress: Address;
@@ -80,7 +81,7 @@
       const connectedAccount = accounts[0] as Address;
 
       // Get balance
-      const balanceData = await getBalanceForAddress(connectedAccount);
+      const balanceData = await getBalanceForERC20(connectedAccount, ERC20_WORMHOLE_TOKEN);
 
       if (!balanceData) {
         error = "Could not fetch balance. Please try again.";
@@ -160,8 +161,12 @@
 
       // Check balance
       isValidating = true;
-      const hasBalance = await hasSufficientBalanceForAddress(
+
+
+
+      const hasBalance = await hasSufficientBalanceForRC20(
         connectedAccount,
+        ERC20_WORMHOLE_TOKEN,
         amount,
       );
 
@@ -290,7 +295,7 @@
       <Info size={16} />
       <AlertTitle>Your Balance</AlertTitle>
       <AlertDescription>
-        You have <span class="font-semibold">{maxBalance} ETH</span> available to
+        You have <span class="font-semibold">{maxBalance} WRMHL</span> available to
         send.
       </AlertDescription>
     </Alert>
@@ -308,7 +313,7 @@
   {#if isOnCorrectChain !== false}
     <div class="space-y-2">
       <label for="amount" class="text-sm font-medium text-foreground">
-        Amount (ETH)
+        Amount (WRMHL)
       </label>
       <div class="flex items-end gap-2">
         <div class="flex-1">

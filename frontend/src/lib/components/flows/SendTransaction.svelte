@@ -14,8 +14,11 @@
   import { callRelay } from "$lib/utils/relay";
   import { transactions } from "$lib/store/transactions";
   import { ensCache } from "$lib/store/ensCache";
-  import type { Address } from "viem";
+  import { parseUnits, type Address } from "viem";
   import { Check, AlertCircle, Loader2, ExternalLink } from "@lucide/svelte";
+	import { ERC20_WORMHOLE_TOKEN } from '$lib/constants';
+	import WormholeTokenAbi from '$lib/abis/WormholeToken.json';
+	import { getWalletClient } from '$lib/utils/wallet';
 
   interface Props {
     recipientAddress: Address | null;
@@ -31,6 +34,7 @@
      */
     stealthMetaAddress: string | null;
     burnAddress: Address | null;
+		
     ephemeralPublicKey: string | null;
   }
 
@@ -70,89 +74,44 @@
         amountType: typeof amount,
       });
 
-       // Send transaction
-       const result = await sendTransaction(burnAddress, amount);
+			const [account] = await getWalletClient().getAddresses();
 
-       // Call relayer
-       let relayResponse;
-       try {
-         relayResponse = await callRelay(ephemeralPublicKey, burnAddress);
-       } catch (relayError) {
-         const relayErrorMessage =
-           relayError instanceof Error ? relayError.message : "Unknown relay error";
-         console.error("Relay error:", relayErrorMessage);
-         transactionError = `Relay failed: ${relayErrorMessage}`;
-         onError?.(transactionError);
-         return;
-       }
+			const txHash = await getWalletClient().writeContract({
+				abi: WormholeTokenAbi.abi as any,
+				address: ERC20_WORMHOLE_TOKEN,
+				functionName: 'transfer',
+				args: [burnAddress, parseUnits(amount, 18)],
+				account: account,
+			});
 
-       // Handle relay error response
-       if (!relayResponse.success || relayResponse.error) {
-         const relayError = relayResponse.error || "Relay request failed";
-         transactionError = `Relay failed: ${relayError}`;
-         onError?.(transactionError);
-         return;
-       }
+			if (!txHash) {
+				transactionError = 'Failed to write contract';
+				onError?.(transactionError);
+				return;
+			}
 
-      if (result.error) {
-        transactionError = result.error;
-        onError?.(result.error);
-        return;
-      }
+			transactionHash = txHash;
+			onSuccess?.(txHash);
 
-      if (!result.hash) {
-        transactionError = "Failed to get transaction hash";
-        onError?.(transactionError);
-        return;
-      }
-
-      transactionHash = result.hash;
-      onSuccess?.(result.hash);
-
-      // Record transaction in history
-      const accounts = await window.ethereum?.request({
-        method: "eth_accounts",
-      });
-      const fromAddress = accounts?.[0] || "Unknown";
-      const toEnsName = ensCache.get(recipientAddress) || recipientName || null;
-
-      transactions.add({
-        hash: result.hash,
-        from: fromAddress,
-        to: recipientAddress,
-        toEnsName: toEnsName,
-        amount: amount,
-        timestamp: Date.now(),
-        status: "pending",
-        explorerUrl: getExplorerUrl(result.hash),
-      });
-
-      // Try to wait for receipt
-      isWaitingForReceipt = true;
-      try {
-        transactionReceipt = await waitForTransactionReceipt(
-          result.hash,
-          60000,
-        );
-        // Update status to confirmed
-        transactions.updateStatus(result.hash, "confirmed");
-      } catch (err) {
-        console.warn(
-          "Receipt not received within timeout, but tx was sent:",
-          err,
-        );
-      } finally {
-        isWaitingForReceipt = false;
-      }
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Unknown error occurred";
-      transactionError = errorMessage;
-      onError?.(errorMessage);
-    } finally {
-      isSending = false;
-    }
-  }
+			// Try to wait for receipt
+			isWaitingForReceipt = true;
+			try {
+				transactionReceipt = await waitForTransactionReceipt(txHash, 60000);
+				// Update status to confirmed
+				transactions.updateStatus(txHash, 'confirmed');
+			} catch (err) {
+				console.warn('Receipt not received within timeout, but tx was sent:', err);
+			} finally {
+				isWaitingForReceipt = false;
+			}
+		} catch (err) {
+			const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+			transactionError = errorMessage;
+			onError?.(errorMessage);
+		} finally {
+			isSending = false;
+		}
+	}
 
   function handleRetry() {
     transactionHash = null;
@@ -180,14 +139,14 @@
 
       <div class="p-4 bg-card border border-border rounded-md">
         <p class="text-xs text-muted-foreground mb-1">Amount</p>
-        <p class="text-2xl font-bold">{amount} ETH</p>
+        <p class="text-2xl font-bold">{amount} WRMHL</p>
       </div>
 
       <Alert>
         <AlertCircle size={16} />
-        <AlertTitle>Ready to Send</AlertTitle>
+        <AlertTitle>Ready to Be Burned</AlertTitle>
         <AlertDescription>
-          Click the Send button below to submit this transaction. You'll be
+          Click the Burn button below to submit this transaction. You'll be
           asked to confirm in your wallet.
         </AlertDescription>
       </Alert>

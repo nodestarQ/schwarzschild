@@ -1,1 +1,2 @@
+export const ERC20_WORMHOLE_TOKEN = "0x67Cc5Ac2029aaA9FD56F7D036d61f2d80A034c10"
 export const PRIVATE_ADDRESS_TYPE = 0x5a4b574f524d484f4c45n; //"0x" + [...new TextEncoder().encode("zkwormhole")].map(b=>b.toString(16)).join('') as Hex
