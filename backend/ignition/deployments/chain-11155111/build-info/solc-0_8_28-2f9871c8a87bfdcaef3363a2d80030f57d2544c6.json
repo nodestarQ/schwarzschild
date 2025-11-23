@@ -1,0 +1,39 @@
+{
+  "_format": "hh3-sol-build-info-1",
+  "id": "solc-0_8_28-2f9871c8a87bfdcaef3363a2d80030f57d2544c6",
+  "solcVersion": "0.8.28",
+  "solcLongVersion": "0.8.28+commit.7893614a",
+  "userSourceNameMap": {
+    "contracts/StealthBurnRegistry.sol": "project/contracts/StealthBurnRegistry.sol"
+  },
+  "input": {
+    "language": "Solidity",
+    "settings": {
+      "evmVersion": "cancun",
+      "optimizer": {
+        "enabled": true,
+        "runs": 20
+      },
+      "outputSelection": {
+        "*": {
+          "": [
+            "ast"
+          ],
+          "*": [
+            "abi",
+            "evm.bytecode",
+            "evm.deployedBytecode",
+            "evm.methodIdentifiers",
+            "metadata"
+          ]
+        }
+      },
+      "remappings": []
+    },
+    "sources": {
+      "project/contracts/StealthBurnRegistry.sol": {
+        "content": "// SPDX-License-Identifier: MIT\n// Compatible with OpenZeppelin Contracts ^5.0.0\npragma solidity ^0.8.3;\n\nevent StealthBurn(bytes32 ephemeralPublicKey, address burnAddress);\n\ncontract StealthBurnRegistry {\n\n    constructor() {\n    }\n\n    function emitBurn(bytes32 ephemeralPublicKey, address burnAddress) public {\n        emit StealthBurn(ephemeralPublicKey, burnAddress);\n    }\n}"
+      }
+    }
+  }
+}

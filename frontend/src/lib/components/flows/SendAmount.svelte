@@ -275,7 +275,7 @@
       <Info size={16} />
       <AlertTitle>Your Burn Address</AlertTitle>
       <AlertDescription>
-        {void formatAddressForDisplay(burnAddress, true)}
+        {await formatAddressForDisplay(burnAddress, true)}
       </AlertDescription>
     </Alert>
   {/if}

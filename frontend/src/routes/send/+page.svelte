@@ -62,6 +62,7 @@
       const pubKeyX = metakey?.slice(141, 141 + 64)
 
       burnAddress = getBurnAddress(pubKeyX as Hex, selectedAddress as Address)
+      console.log({ burnAddress })
     })
   })
 

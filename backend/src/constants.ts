@@ -7,6 +7,7 @@ export const WormholeTokenContractName = "WormholeToken"
 export const leanIMTPoseidon2ContractName = "leanIMTPoseidon2"
 export const PrivateTransferVerifierContractName = "PrivateTransferVerifier"
 export const ZKTranscriptLibContractName = "ZKTranscriptLib"
+export const StealthBurnRegistryContractName = "StealthBurnRegistry"
 
 export const TOTAL_RECEIVED_DOMAIN = 0x52454345495645445F544F54414Cn; // UTF8("total_received").toHex()
 export const TOTAL_SPENT_DOMAIN = 0x5350454E545F544F54414Cn; // UTF8("total_spent").toHex()
