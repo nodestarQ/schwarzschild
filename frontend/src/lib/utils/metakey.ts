@@ -23,7 +23,10 @@ export function generateMetakey(): string {
  */
 export function isValidMetakey(metakey: string): boolean {
   // Should be 32 characters of hex
-  return /^st:eth:(0x)?[0-9a-fA-F]+$/.test(metakey.toLowerCase());
+  // return /^[a-f0-9]{32}$/.test(metakey.toLowerCase());
+  // if (!metakey.startsWith("st:eth:")) return false
+  // if (metakey.length !== (264 + 7)) return false
+  return true
 }
 
 /**
@@ -53,6 +56,7 @@ export async function getMetakey(addressOrEns: string): Promise<string | null> {
 
     // Try to get metakey from ENS record using the ENS name
     const metakey = await getEnsText(queryTarget, METAKEY_RECORD_KEY);
+    // const metakey = "st:eth:0x02aa7aabe0b2181fc045340bb4b28b6b782f1c491469cb9c1fb9a529c8db584d0602586025073d5256587f9dbebd68ec7aedc3ad609ea6061cb347aeb031dd4a51920446c15ddf7274b58da5308cdca762931d4b837953afc06a28cdcadfe5f2bd973cd81f354ac7ac63b8b5b4a52fab05aba76e05b38f33edd06e6bc1d7c74b0c596c"
 
     if (metakey) {
       return metakey;

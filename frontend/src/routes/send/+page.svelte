@@ -17,16 +17,17 @@
   import WalletConnectModal from "$lib/components/WalletConnectModal.svelte";
   import { walletModal } from "$lib/store/walletModal";
   import { navigateHome } from "$lib/utils/navigation";
-  import type { Address } from "viem";
+  import type { Address, Hex } from "viem";
   import { CheckCircle2 } from "@lucide/svelte";
 
   type SendStep = "search" | "amount" | "confirm" | "success";
+  import { getMetakey } from "$lib/utils/metakey";
+  import { getBurnAddress } from "$lib/burn";
 
   let selectedAddress: Address | null = $state(null);
   let ensName: string | null = $state(null);
   let sendAmount: string | null = $state(null);
   let transactionHash: string | null = $state(null);
-  let currentStep = $state<SendStep>("search");
 
   const STEPS: SendStep[] = ["search", "amount", "confirm", "success"];
   const STEP_TITLES: Record<SendStep, string> = {
@@ -41,6 +42,33 @@
     confirm: "Review the transaction details before sending.",
     success: "Your transaction has been submitted to the network.",
   };
+  let transactionError: string | null = $state(null);
+  let currentStep = $state<"search" | "amount" | "confirm" | "success">("search");
+  let stealthMetaAddress: string | null = $state(null);
+  let burnAddress: Address | null = $state(null);
+
+  $effect(() => {
+    if (!selectedAddress) return
+    getMetakey(selectedAddress).then(metakey => {
+      stealthMetaAddress = metakey
+
+      // skip first 141 chars as they are:
+      // "st:eth:"
+      // 0xViewingPublicKey
+      // 0xSpendingPublicKey
+      // and only get:
+      // 0xPubKeyX
+
+      const pubKeyX = metakey?.slice(141, 141 + 64)
+
+      burnAddress = getBurnAddress(pubKeyX as Hex, selectedAddress as Address)
+    })
+  })
+
+
+  function handleBack() {
+    router.navigate("home");
+  }
 
   function handleWalletSelect(
     address: Address,
@@ -110,6 +138,7 @@
              <SendAmount
                recipientAddress={selectedAddress}
                recipientName={ensName}
+               burnAddress={burnAddress}
                onSubmit={handleAmountSubmit}
                onBack={handleBackFromAmount}
              />
@@ -120,6 +149,8 @@
                recipientAddress={selectedAddress}
                recipientName={ensName}
                amount={sendAmount}
+               burnAddress={burnAddress}
+               stealthMetaAddress={stealthMetaAddress}
                onSuccess={handleTransactionSuccess}
                onError={() => {}}
                onBack={handleBack2Steps}

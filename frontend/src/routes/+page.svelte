@@ -17,7 +17,7 @@
 
 	<div class="w-full max-w-2xl">
 		<div class="text-center mb-12">
-			<h1 class="text-4xl font-bold mb-2">Schwarzschild</h1>
+			<h1 class="text-4xl font-bold mb-2">Schwarzschild ◼️🛡️</h1>
 			<p class="text-lg text-muted-foreground">Send and receive crypto with MetaKeys</p>
 		</div>
 

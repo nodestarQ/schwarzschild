@@ -3,7 +3,7 @@
 import { connectedAccount, currentProvider, signMessage } from '$lib/providers'
 import { getStealthMetaAddress } from '$lib/stealth/prepare-keys'
 import { recoverPublicKey, stringToHex, toHex, type Hex } from 'viem';
-  import ResolveStealthAddy from './ResolveStealthAddy.svelte';
+import ResolveStealthAddy from './ResolveStealthAddy.svelte';
 
 let spendingKey: string | null = null
 let viewingKey: string | null = null
