@@ -58,12 +58,6 @@ yarn hardhat run scripts/deployPoseidon2.ts --network sepolia
 
 ## deployed addresses
 ### sepolia 
-WormholeToken - [0x67Cc5Ac2029aaA9FD56F7D036d61f2d80A034c10](https://sepolia.etherscan.io/address/0x67Cc5Ac2029aaA9FD56F7D036d61f2d80A034c10)  
-
-
-PrivateTransferVerifier - [0x342149C7108bb2b0052624f61629f5813B9B9466](https://sepolia.etherscan.io/address/0x342149C7108bb2b0052624f61629f5813B9B9466)  
-ZKTranscriptLib - [0x8F961e056967DD2A1170dBeCd9e5E51CA815B0D9](https://sepolia.etherscan.io/address/0x8F961e056967DD2A1170dBeCd9e5E51CA815B0D9)  
-leanIMTPoseidon2 - [0xcbf45ce9650A8F4E51933A13857016B1A44c3d94](https://sepolia.etherscan.io/address/0xcbf45ce9650A8F4E51933A13857016B1A44c3d94)  
 
 StealthBurnRegistry — [0x43208AA38104d08EC099d55F709dd46E52ea619C](https://sepolia.etherscan.io/address/0x43208AA38104d08EC099d55F709dd46E52ea619C)
 
