@@ -1,66 +1,42 @@
-# An alternative implementation of EIP7503 that is account based and has re-usable burn address
-This repo is a PoC of a better way of doing plausible deniability on ethereum.   
-However this repo is built as a ERC-20 compatible token but it can and should also be built into the base-layer of ethereum!
-You can clone the repo and try-out the ui or try it on sepolia here: https://eip7503-erc20.jimjim.dev/
+# Schwarzschild (BlackShield) ◼️🛡️
 
-## The original EIP7503 
-* Base layer of ethereum
-* No re-usable addresses: `nullifier=hash(0x01,secret)` and the `address=hash(secret)` which means you cannot re-use that address
-* No Hardware wallet support: because `address=hash(secret)` and the secret is a private input for the circuit, the hardware wallet would need to make the zk-proof on device which is not possible on the ledger, trezor, etc
-* Uses the state-trie for inclusion proof (a hexanary tree with keccak), this is slow to proof and requires ton of ram.
+![123](./docs/images/image.png)
 
+We believe that privacy should be a first-class citizen on Ethereum. Unfortunately, existing solutions like Tornado Cash, Railgun, and Privacy Pools struggle with user experience. That's why we decided to explore the promising EIP-7503, which enables faster finality for private transfers.
 
-## This repo 
-* Is on the application layer (a contract) *(but can/should be implemented on base layer as well!!)*
-* Uses a in-contract binary merkle tree with the poseidon2 hash function. 
-* Re usable address: The balance tracking is split into 2, the total received and total spend.  
-The total received is just the burned balance.  
-The total spend is tracked inside a note based commitment scheme.   
-* Hardware wallet support: `address=poseidon2Hash(public_key,shared_secret,"ZKWORMHOLE")` the circuit verifies a secp256k1 signature that authorize that pub_key to spend the funds. Here the hardware wallet can create the signature and then the users machine can create the proof.    
+⚠️ **This repository builds on [jimjim's EIP-7503 implementation](https://github.com/jimjimvalkema/EIP7503-ERC20), extending it to support ERC-20 tokens, hardware wallets, and more.** However, the original implementation required users to maintain a separate private key for minting funds after the link between sender and recipient was broken which is a significant UX hurdle.
 
+We focused on dramatically improving user experience by implementing a Diffie-Hellman-style key exchange inspired by Stealth Addresses. For users, this means that after a simple onboarding process, they can receive private transfers using their ENS name and seamlessly decide what to do with their funds once the link was broken.
 
-## nullifier and balance tracking
-Instead of nullifying the entire address the circuit checks: `assert(burned_balance - total_spend >= amount_spend_in_tx)`.  
-The `total_spend` is tracked in an account based note system where:   
-`note_hash=poseidon2Hash(total_spent, account_nonce, viewing_key)` and   
-`nullifier=poseidon2Hash(account_nonce, viewing_key)`    
-The circuit does an inclusion proof of `prev_note_hash`, nullifies it and then creates a new note hash with the new total amount spend that is:   
-`new_note_hash=poseidon2Hash(prev_total_spent+amount_spend_in_tx, account_nonce+1, viewing_key)`.    
-On the first spend the inclusion proof of `prev_note_hash` is skipped (since it doesn't exist), but there is a nullifier is emitted, ensuring this can only happen once.  
-  
-The `burned_balance` is tracked by the contract in the merkle tree with a leaf that is `leaf=poseidon2Hash(recipient_address, balance)` and the circuit uses that to make inclusion proof.  
-*note some code is different then the source for simplicity like the domain separators being omitted here ex:TOTAL_RECEIVED_DOMAIN*
+## The Original EIP-7503 vs ERC-20 Compatible EIP-7503
 
-## burn address and the 10$ billion collision attack (eip-3607)
-The address scheme is `address=poseidon2Hash(public_key,shared_secret,"ZKWORMHOLE")`   
-`"ZKWORMHOLE"`: is a string add as an extra measure to make sure zkwormhole addresses never collide with ethereum address even if they switched to poseidon2. `public_key` here is the x coordinate of the secp256k1 public key.  
-`shared_secret`: a number that results in a valid PoW hash that makes finding a collision with EOA addresses much harder.
-The PoW is verified like this:   
-```rs
-let address_hash: Field = Poseidon2::hash([pub_key,shared_secret, PRIVATE_ADDRESS_TYPE], 3);
-let pow_hash: Field = Poseidon2::hash([shared_secret, address_hash], 2); 
-assert_lt(pow_hash, POW_DIFFICULTY); 
-```  
+The original EIP-7503 introduced important privacy features but required users to manage single-use addresses and lacked robust hardware wallet support, making secure and convenient interaction difficult for typical users. 
 
-`address_hash` then has the first 12 bytes set to 0, so it the same length as ethereum address *(this is also the cause of that collision attack vector 😬).*
+This repository improves usability and flexibility by:
+- **Enabling address reuse** – No need to generate new addresses for each transaction
+- **Simplifying balance tracking** – Users can easily monitor their private balances
+- **Supporting hardware wallets** – Secure key management with familiar devices
+- **Application-layer implementation** – Moving privacy features to smart contracts allows for upgrades and improvements while maintaining accessibility
 
-## optimizations
-Merkle tree: The balances tracked in the merkle tree update on **every** transfer, even if a user never intends to use any privacy. This is to preserve plausible deniability. However this can optimized by:
-* Only updating the recipient in the transfer, since burn addresses will never be senders! *(note that this does make the balance inaccurate for non burn addresses)*
-* skipping merkle tree updates when `tx.origin==recipient`, since then the recipient is for sure a EOA and not a burn address.  
-* WARNING: you might be tempted to check if recipient is a contract with `recipient.code!=0x00`, but this incentives EOAs to set code or user to use smart contract wallet to save on gas. **This breaks plausible deniability**.
+By implementing these changes at the application layer, we can iterate on the protocol and enhance the user experience while preserving the core privacy guarantees.
 
-## relayer
-The relayer logic does accounting based on the baseFee which makes it more fair then the relayer in ex: tornadocash.   
-Currently the ui has no relayer and just stores the proofs in localstorage to be self relayed from a different account.  
-But the contract and circuit does support external relays and it is tested in `test/Token.test.ts`
+## ERC-5564 (Stealth Addresses) and ERC-6538 (Stealth Meta-Address Registry) role 
+
+This existing and not yet so widely adopted ERC may already allow users to do transfers (and most-importantly self-transfer) to break the link with source of funds. However it introduced new problems with neccesity to either fund these addresses from original wallet what break anonymity or introduce account abstraction which adds additional costs and techincal complexity. However mechanism of both parties accessing some shared secret (in original ERC it's ephemeral private key) to create a communication channel that protects funds reciever, but not the sender. 
+
+## The Land in-between
+
+Once we were discussing existing solutions we sparked that ZK-Wormholes and Stealth Addresses are nicely complimenting each other but require some additional adjustments to adopt to new specifics. Such as using shared secret as a salt for burn address generation and completely unnessesary mechanism of controling the private keys of burner addresses. 
+
+Solution that we came up with includes not using generated stealth addresses to recieve funds but just discover a shared secret. The trick was to use stealth address as a shared secret itself and not post it onchain. In this case Alice can always derrive this secret as well as bob on his side. And the only modification is needed is to replace `stealthAddress` in the `Announcement` event with the `burnAddress` which Bob can derrive on his side and understand, that private note was meant to him and there is some balance to be claimed.
 
 ## WARNINGS
 * The value `POW_DIFFICULTY` has been set to an arbitrary number and **IS LIKELY INSECURE**   
-https://github.com/jimjimvalkema/EIP7503-ERC20/blob/7a4850ddc6503442dfbd484ac3754a1bd0c02796/circuits/privateTransfer/src/main.nr#L13  
+https://github.com/jimjimvalkema/EIP7503-ERC20/blob/7a485j0ddc6503442dfbd484ac3754a1bd0c02796/circuits/privateTransfer/src/main.nr#L13  
 https://github.com/jimjimvalkema/EIP7503-ERC20/blob/7a4850ddc6503442dfbd484ac3754a1bd0c02796/src/constants.ts#L17  
 * Compliance (not legal advice ofc): the viewing_key can be used to reveal transaction history but that use case needs more research. It should also be possible to make a PoI scheme work without modifying the circuits/contracts like on railgun. As of now this repo doesn't provide tools for compliance.  
 * This is unaudited and experimental. The poseidon2 contract is also experimental and built with huff: https://github.com/zemse/poseidon2-evm  
+
 ## deploy
 setup secrets:  
 `yarn hardhat keystore set SEPOLIA_RPC_URL`  
@@ -70,6 +46,7 @@ setup secrets:
 deploy main contracts:  
 ```shell
 yarn hardhat ignition deploy ignition/modules/wormtoken.ts --verify --network sepolia
+yarn hardhat ignition deploy ignition/modules/stealth-burn-registry.ts --verify --network sepolia
 ```  
 
 deploy poseidon2 hasher with create2 (if it's not deployed yet)
@@ -86,9 +63,12 @@ PrivateTransferVerifier - [0x342149C7108bb2b0052624f61629f5813B9B9466](https://s
 ZKTranscriptLib - [0x8F961e056967DD2A1170dBeCd9e5E51CA815B0D9](https://sepolia.etherscan.io/address/0x8F961e056967DD2A1170dBeCd9e5E51CA815B0D9)  
 leanIMTPoseidon2 - [0xcbf45ce9650A8F4E51933A13857016B1A44c3d94](https://sepolia.etherscan.io/address/0xcbf45ce9650A8F4E51933A13857016B1A44c3d94)  
 
+StealthBurnRegistry — [0x43208AA38104d08EC099d55F709dd46E52ea619C](https://sepolia.etherscan.io/address/0x43208AA38104d08EC099d55F709dd46E52ea619C)
+
 
 ## run ui
 compile
+
 ```shell
 yarn noir;
 yarn solidity;
@@ -97,3 +77,7 @@ yarn solidity;
 ```shell
 yarn vite website;
 ```
+
+## Authors
+
+@TODO
