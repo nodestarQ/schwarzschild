@@ -4,6 +4,7 @@
 	import { getEnsName } from '$lib/utils/wallet';
 	import type { Address } from 'viem';
 	import { Wallet, LogOut } from '@lucide/svelte';
+	import MintFaucet from './misc/MintFaucet.svelte';
 
 
 	interface Props {
@@ -65,6 +66,8 @@
 					{/if}
 				</div>
 			</div>
+
+			<MintFaucet />
 		</div>
 		<Button
 			onclick={handleDisconnect}

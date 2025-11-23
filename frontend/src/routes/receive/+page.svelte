@@ -13,10 +13,11 @@
   import BalanceDisplay from "$lib/components/BalanceDisplay.svelte";
   import { walletModal } from "$lib/store/walletModal";
   import { navigateHome } from "$lib/utils/navigation";
-  import { getBalanceForAddress } from "$lib/utils/balance";
+  import { getBalanceForERC20 } from "$lib/utils/balance";
   import { getMetakey } from "$lib/utils/metakey";
   import { formatAddressForDisplay } from "$lib/utils/wallet";
   import type { Address } from "viem";
+  import { ERC20_WORMHOLE_TOKEN } from "$lib/constants";
 
   type ReceiveStep = "setup" | "create-metakey" | "display";
 
@@ -57,7 +58,12 @@
       }
 
       // Get balance
-      const balanceData = await getBalanceForAddress(address);
+      const balanceData = await getBalanceForERC20(address, ERC20_WORMHOLE_TOKEN);
+      if (!balanceData) {
+        error = "Could not fetch balance. Please try again.";
+        return;
+      }
+
       totalBalance = balanceData?.formatted || "0";
 
       // Check if ENS already has MetaKey record

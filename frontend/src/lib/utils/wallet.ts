@@ -5,6 +5,8 @@ import {
   getAddress,
   type Address,
   defineChain,
+  custom,
+  createWalletClient,
 } from "viem";
 import { normalize } from "viem/ens";
 import { getEnsAddress } from "../ens";
@@ -40,11 +42,18 @@ const sepolia = /*#__PURE__*/ defineChain({
 /**
  * Create a public client for wallet operations
  */
-function getPublicClient() {
+export function getPublicClient() {
   return createPublicClient({
     chain: sepolia,
     transport: http(),
   });
+}
+
+export function getWalletClient() {
+  return createWalletClient({
+    chain: sepolia,
+    transport: custom(window.ethereum)
+  })
 }
 
 /**
