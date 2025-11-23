@@ -12,8 +12,11 @@
   import SendAmount from "$lib/components/flows/SendAmount.svelte";
   import SendTransaction from "$lib/components/flows/SendTransaction.svelte";
   import { router } from "$lib/store/router";
-  import type { Address } from "viem";
+  import type { Address, Hex } from "viem";
   import { ArrowLeft, CheckCircle2 } from "@lucide/svelte";
+  import { getMetakey } from "$lib/utils/metakey";
+  import { getBurnAddress } from "$lib/burn";
+  import SetupSMA from "$lib/components/SetupSMA.svelte";
 
   let selectedAddress: Address | null = $state(null);
   let ensName: string | null = $state(null);
@@ -21,6 +24,27 @@
   let transactionHash: string | null = $state(null);
   let transactionError: string | null = $state(null);
   let currentStep = $state<"search" | "amount" | "confirm" | "success">("search");
+  let stealthMetaAddress: string | null = $state(null);
+  let burnAddress: Address | null = $state(null);
+
+  $effect(() => {
+    if (!selectedAddress) return
+    getMetakey(selectedAddress).then(metakey => {
+      stealthMetaAddress = metakey
+
+      // skip first 141 chars as they are:
+      // "st:eth:"
+      // 0xViewingPublicKey
+      // 0xSpendingPublicKey
+      // and only get:
+      // 0xPubKeyX
+
+      const pubKeyX = metakey?.slice(141, 141 + 64)
+
+      burnAddress = getBurnAddress(pubKeyX as Hex, selectedAddress as Address)
+    })
+  })
+
 
   function handleBack() {
     router.navigate("home");
@@ -148,6 +172,7 @@
               <SendAmount
                 recipientAddress={selectedAddress}
                 recipientName={ensName}
+                burnAddress={burnAddress}
                 onSubmit={handleAmountSubmit}
                 onBack={handleBackFromAmount}
               />
@@ -158,6 +183,8 @@
                 recipientAddress={selectedAddress}
                 recipientName={ensName}
                 amount={sendAmount}
+                burnAddress={burnAddress}
+                stealthMetaAddress={stealthMetaAddress}
                 onSuccess={handleTransactionSuccess}
                 onError={handleTransactionError}
                 onBack={handleBack2Steps}

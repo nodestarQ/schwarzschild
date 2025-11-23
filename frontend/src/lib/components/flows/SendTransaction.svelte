@@ -17,6 +17,13 @@
 		onSuccess?: (hash: string) => void;
 		onError?: (error: string) => void;
 		onBack?: () => void;
+		/**
+		 * The stealth meta address of the recipient
+		 * This is used to compute the burn address
+		 * @example "st:eth:0xa12c40e34d89f0259da4d112928655ad0f8df7ac3414efcfc66e43c9425d49b854e28ab44202a69746c2ac4f76dfe87516c230e2e4a9f15d1577ca3236a14304"
+		 */
+		stealthMetaAddress: string | null;
+		burnAddress: Address | null;
 	}
 
 	let { recipientAddress, recipientName = '', amount = '', onSuccess, onError, onBack }: Props = $props();

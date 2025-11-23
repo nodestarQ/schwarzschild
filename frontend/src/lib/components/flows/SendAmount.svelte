@@ -6,6 +6,7 @@
 	import { isConnectedToTargetChain, switchToTargetChain, getTargetChainInfo } from '$lib/utils/chain';
 	import type { Address } from 'viem';
 	import { AlertCircle, Info, AlertTriangle } from '@lucide/svelte';
+	import { formatAddressForDisplay } from '$lib/utils/wallet';
 
 	interface Props {
 		recipientAddress: Address;
@@ -13,9 +14,10 @@
 		onSubmit?: (amount: string) => void;
 		onBack?: () => void;
 		loading?: boolean;
+		burnAddress: Address | null;
 	}
 
-	let { recipientAddress, recipientName = '', onSubmit, onBack, loading = false }: Props = $props();
+	let { recipientAddress, recipientName = '', onSubmit, onBack, loading = false, burnAddress }: Props = $props();
 
 	let amount = $state('');
 	let maxBalance = $state<string | null>(null);
@@ -220,6 +222,15 @@
 				You are on {chainInfo.name}. Ready to send.
 			</AlertDescription>
 		</Alert>
+
+		<Alert>
+			<Info size={16} />
+			<AlertTitle>Your Burn Address</AlertTitle>
+			<AlertDescription>
+				{await formatAddressForDisplay(burnAddress, true)}
+			</AlertDescription>
+		</Alert>
+
 	{/if}
 
 	<!-- Balance Display -->
