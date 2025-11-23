@@ -7,7 +7,11 @@
     CardHeader,
     CardTitle,
   } from "$lib/components/ui/card";
-  import { Alert, AlertTitle, AlertDescription } from "$lib/components/ui/alert";
+  import {
+    Alert,
+    AlertTitle,
+    AlertDescription,
+  } from "$lib/components/ui/alert";
   import PageHeader from "$lib/components/PageHeader.svelte";
   import ProgressBar from "$lib/components/ProgressBar.svelte";
   import WalletSearch from "$lib/components/flows/WalletSearch.svelte";
@@ -23,6 +27,7 @@
   type SendStep = "search" | "amount" | "confirm" | "success";
   import { getMetakey } from "$lib/utils/metakey";
   import { getBurnAddress } from "$lib/burn";
+  import { getStealthAddy } from "$lib/stealth/prepare-keys";
 
   let selectedAddress: Address | null = $state(null);
   let ensName: string | null = $state(null);
@@ -37,20 +42,24 @@
     success: "Transaction Complete",
   };
   const STEP_DESCRIPTIONS: Record<SendStep, string> = {
-    search: "Enter a wallet address or ENS name. We'll verify they have a MetaKey.",
+    search:
+      "Enter a wallet address or ENS name. We'll verify they have a MetaKey.",
     amount: "Enter the amount you want to send to this recipient.",
     confirm: "Review the transaction details before sending.",
     success: "Your transaction has been submitted to the network.",
   };
   let transactionError: string | null = $state(null);
-  let currentStep = $state<"search" | "amount" | "confirm" | "success">("search");
+  let currentStep = $state<"search" | "amount" | "confirm" | "success">(
+    "search",
+  );
   let stealthMetaAddress: string | null = $state(null);
   let burnAddress: Address | null = $state(null);
+  let ephemeralPublicKey: string | null = $state(null);
 
   $effect(() => {
-    if (!selectedAddress) return
-    getMetakey(selectedAddress).then(metakey => {
-      stealthMetaAddress = metakey
+    if (!selectedAddress) return;
+    getMetakey(selectedAddress).then(async (metakey) => {
+      stealthMetaAddress = metakey;
 
       // skip first 141 chars as they are:
       // "st:eth:"
@@ -59,13 +68,14 @@
       // and only get:
       // 0xPubKeyX
 
-      const pubKeyX = metakey?.slice(141, 141 + 64)
+      const pubKeyX = metakey?.slice(141, 141 + 64);
 
-      burnAddress = getBurnAddress(pubKeyX as Hex, selectedAddress as Address)
-      console.log({ burnAddress })
-    })
-  })
-
+      burnAddress = getBurnAddress(pubKeyX as Hex, selectedAddress as Address);
+      const stealthAddy = await getStealthAddy(stealthMetaAddress as string);
+      ephemeralPublicKey = stealthAddy.ephemeralPublicKey;
+      console.log({ burnAddress });
+    });
+  });
 
   function handleBack() {
     router.navigate("home");
@@ -113,89 +123,94 @@
 
 <main class="min-h-screen bg-background p-4">
   <WalletHeader onOpenWalletModal={() => walletModal.open()} />
-  
+
   <div class="max-w-2xl mx-auto">
-    <PageHeader
-      title="Send Crypto"
-      onBack={navigateHome}
-    />
+    <PageHeader title="Send Crypto" onBack={navigateHome} />
 
     <ProgressBar {currentStep} steps={STEPS} />
 
     <!-- Content -->
     <Card>
-       <CardHeader>
-         <CardTitle>{STEP_TITLES[currentStep]}</CardTitle>
-         <CardDescription>
-           {STEP_DESCRIPTIONS[currentStep]}
-         </CardDescription>
-       </CardHeader>
+      <CardHeader>
+        <CardTitle>{STEP_TITLES[currentStep]}</CardTitle>
+        <CardDescription>
+          {STEP_DESCRIPTIONS[currentStep]}
+        </CardDescription>
+      </CardHeader>
 
-       <CardContent>
-         {#if currentStep === "search"}
-           <WalletSearch onSelect={handleWalletSelect} />
-         {:else if currentStep === "amount"}
-           {#if selectedAddress}
-             <SendAmount
-               recipientAddress={selectedAddress}
-               recipientName={ensName}
-               burnAddress={burnAddress}
-               onSubmit={handleAmountSubmit}
-               onBack={handleBackFromAmount}
-             />
-           {/if}
-         {:else if currentStep === "confirm"}
-           {#if selectedAddress && sendAmount}
-             <SendTransaction
-               recipientAddress={selectedAddress}
-               recipientName={ensName}
-               amount={sendAmount}
-               burnAddress={burnAddress}
-               stealthMetaAddress={stealthMetaAddress}
-               onSuccess={handleTransactionSuccess}
-               onError={() => {}}
-               onBack={handleBack2Steps}
-             />
-           {/if}
-         {:else}
-           <!-- Success State -->
-           <div class="space-y-4">
-             <Alert class="border-green-500/50 bg-green-500/10">
-               <CheckCircle2 size={16} class="text-green-600" />
-               <AlertTitle class="text-green-600">Transaction Submitted!</AlertTitle>
-               <AlertDescription class="text-green-700">
-                 Your transaction has been submitted to the network. You can check its status on the block explorer.
-               </AlertDescription>
-             </Alert>
+      <CardContent>
+        {#if currentStep === "search"}
+          <WalletSearch onSelect={handleWalletSelect} />
+        {:else if currentStep === "amount"}
+          {#if selectedAddress}
+            <SendAmount
+              recipientAddress={selectedAddress}
+              recipientName={ensName}
+              {burnAddress}
+              onSubmit={handleAmountSubmit}
+              onBack={handleBackFromAmount}
+            />
+          {/if}
+        {:else if currentStep === "confirm"}
+          {#if selectedAddress && sendAmount}
+            <SendTransaction
+              recipientAddress={selectedAddress}
+              recipientName={ensName}
+              amount={sendAmount}
+              {burnAddress}
+              {stealthMetaAddress}
+              {ephemeralPublicKey}
+              onSuccess={handleTransactionSuccess}
+              onError={() => {}}
+              onBack={handleBack2Steps}
+            />
+          {/if}
+        {:else}
+          <!-- Success State -->
+          <div class="space-y-4">
+            <Alert class="border-green-500/50 bg-green-500/10">
+              <CheckCircle2 size={16} class="text-green-600" />
+              <AlertTitle class="text-green-600"
+                >Transaction Submitted!</AlertTitle
+              >
+              <AlertDescription class="text-green-700">
+                Your transaction has been submitted to the network. You can
+                check its status on the block explorer.
+              </AlertDescription>
+            </Alert>
 
-             <div class="p-4 bg-card border border-border rounded-md">
-               <p class="text-xs text-muted-foreground mb-1">Recipient</p>
-               <p class="font-mono text-sm break-all">{ensName || selectedAddress}</p>
-             </div>
+            <div class="p-4 bg-card border border-border rounded-md">
+              <p class="text-xs text-muted-foreground mb-1">Recipient</p>
+              <p class="font-mono text-sm break-all">
+                {ensName || selectedAddress}
+              </p>
+            </div>
 
-             <div class="p-4 bg-card border border-border rounded-md">
-               <p class="text-xs text-muted-foreground mb-1">Amount</p>
-               <p class="text-2xl font-bold">{sendAmount} ETH</p>
-             </div>
+            <div class="p-4 bg-card border border-border rounded-md">
+              <p class="text-xs text-muted-foreground mb-1">Amount</p>
+              <p class="text-2xl font-bold">{sendAmount} ETH</p>
+            </div>
 
-             {#if transactionHash}
-               <div class="p-4 bg-card border border-border rounded-md">
-                 <p class="text-xs text-muted-foreground mb-1">Transaction Hash</p>
-                 <p class="font-mono text-xs break-all">{transactionHash}</p>
-               </div>
-             {/if}
+            {#if transactionHash}
+              <div class="p-4 bg-card border border-border rounded-md">
+                <p class="text-xs text-muted-foreground mb-1">
+                  Transaction Hash
+                </p>
+                <p class="font-mono text-xs break-all">{transactionHash}</p>
+              </div>
+            {/if}
 
-             <div class="flex gap-2">
-               <Button variant="outline" class="flex-1" onclick={resetFlow}>
-                 Send Another
-               </Button>
-               <Button class="flex-1" onclick={navigateHome}>
-                 Back to Home
-               </Button>
-             </div>
-           </div>
-         {/if}
-       </CardContent>
+            <div class="flex gap-2">
+              <Button variant="outline" class="flex-1" onclick={resetFlow}>
+                Send Another
+              </Button>
+              <Button class="flex-1" onclick={navigateHome}>
+                Back to Home
+              </Button>
+            </div>
+          </div>
+        {/if}
+      </CardContent>
     </Card>
   </div>
 

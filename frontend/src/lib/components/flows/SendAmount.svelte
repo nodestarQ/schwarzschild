@@ -280,7 +280,11 @@
       <Info size={16} />
       <AlertTitle>Your Burn Address</AlertTitle>
       <AlertDescription>
-        {await formatAddressForDisplay(burnAddress, true)}
+        {#await formatAddressForDisplay(burnAddress, true)}
+          <div>loading...</div>
+        {:then burnAddress}
+          <div>{burnAddress}</div>
+        {/await}
       </AlertDescription>
     </Alert>
   {/if}
