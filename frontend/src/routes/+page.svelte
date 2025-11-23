@@ -65,8 +65,6 @@
 			</Card>
 		</div>
 
-		<!-- Transaction History -->
-		<TransactionHistory />
 	</div>
 </main>
 
