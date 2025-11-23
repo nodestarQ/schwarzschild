@@ -13,8 +13,6 @@ const walletClient = getWalletClient();
 async function mintFaucet() {
     const [account] = await walletClient.getAddresses()
 
-    debugger
-
     const availableTokens = await client.readContract({
         abi: WormholeTokenAbi.abi as any,
         address: ERC20_WORMHOLE_TOKEN,
