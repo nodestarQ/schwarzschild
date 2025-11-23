@@ -2,11 +2,11 @@
 
 ![123](./docs/images/image.png)
 
-In this repo we explore EIP-7503 and stealth addresses. Stealth addresses is a protocol where a sender can derive fresh accounts of a recipients, without linking them together. However it has ux and privacy issues. The recipient still needs to claim all their token from these fresh stealth address accounts which ussually results in a bad ux flow that links them together. We EIP-7503 (zkwormholes) to solve this problem since it can collect "burn" addresses toghether without linking them. And it also adds plausible deniability!
+In this repo we explore EIP-7503 and stealth addresses. Stealth addresses is a protocol where a sender can derive fresh accounts of a recipients, without linking them together. However it has ux and privacy issues. The recipient still needs to claim all their token from these fresh stealth address accounts which ussually results in a bad ux flow that links them together. We used EIP-7503 (zkwormholes) to solve this problem since it can collect "burn" addresses toghether without linking them. And it also adds plausible deniability!
 
 ⚠️ **This repository builds on [jimjim's EIP-7503 implementation](https://github.com/jimjimvalkema/EIP7503-ERC20)
-The original repo is just EIP-7503 with support for ERC-20 tokens, hardware wallets, and more.**
-We used that repo as starting point to later add steath addresses in novel way to keep suppot for hardware wallets, a better ui, eip712 signing (instead of blind signing) and adapted the circuit so it can claim multiple addresses (not merged into main, but see the branch: https://github.com/nodestarQ/schwarzschild/tree/multi-spend-circuit).
+The original repo is just EIP-7503 with support for ERC-20 tokens, hardware wallets, and re-usable addresses.**
+We used that repo as starting point to later add steath addresses (in novel way to keep suppot for hardware wallets), a better ui, eip712 signing (instead of blind signing) and adapted the circuit so it can claim multiple addresses (not merged into main, but see the branch: https://github.com/nodestarQ/schwarzschild/tree/multi-spend-circuit).
 
 We focused on dramatically improving user experience by implementing a Diffie-Hellman-style key exchange inspired by Stealth Addresses. For users, this means that after a simple onboarding process, they can receive private transfers using their ENS name and seamlessly decide what to do with their funds once the link was broken.
 
