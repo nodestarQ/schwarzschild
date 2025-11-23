@@ -26,7 +26,7 @@ COPY --from=builder /app/dist ./dist
 # Copy package.json for reference
 COPY package.json ./
 
-EXPOSE 3000
+EXPOSE 3547
 
 # Serve the dist folder using bun
 CMD ["bun", "run", "--", "bunx", "serve", "-s", "dist", "-l", "3000"]
