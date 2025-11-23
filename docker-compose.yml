@@ -20,11 +20,11 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        VITE_RELAY_URL: http://relay:8080
     container_name: schwarzschild-frontend
     ports:
       - "3547:3547"
-    environment:
-      VITE_RELAY_URL: http://relay:8080
     depends_on:
       - relay
     networks:
