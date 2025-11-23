@@ -74,44 +74,64 @@
         amountType: typeof amount,
       });
 
-			const [account] = await getWalletClient().getAddresses();
+		const [account] = await getWalletClient().getAddresses();
 
-			const txHash = await getWalletClient().writeContract({
-				abi: WormholeTokenAbi.abi as any,
-				address: ERC20_WORMHOLE_TOKEN,
-				functionName: 'transfer',
-				args: [burnAddress, parseUnits(amount, 18)],
-				account: account,
-			});
+		const txHash = await getWalletClient().writeContract({
+			abi: WormholeTokenAbi.abi as any,
+			address: ERC20_WORMHOLE_TOKEN,
+			functionName: 'transfer',
+			args: [burnAddress, parseUnits(amount, 18)],
+			account: account,
+		});
 
-			if (!txHash) {
-				transactionError = 'Failed to write contract';
-				onError?.(transactionError);
-				return;
-			}
-
-			transactionHash = txHash;
-			onSuccess?.(txHash);
-
-			// Try to wait for receipt
-			isWaitingForReceipt = true;
-			try {
-				transactionReceipt = await waitForTransactionReceipt(txHash, 60000);
-				// Update status to confirmed
-				transactions.updateStatus(txHash, 'confirmed');
-			} catch (err) {
-				console.warn('Receipt not received within timeout, but tx was sent:', err);
-			} finally {
-				isWaitingForReceipt = false;
-			}
-		} catch (err) {
-			const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
-			transactionError = errorMessage;
-			onError?.(errorMessage);
-		} finally {
-			isSending = false;
+		if (!txHash) {
+			transactionError = 'Failed to write contract';
+			onError?.(transactionError);
+			return;
 		}
+
+		transactionHash = txHash;
+		onSuccess?.(txHash);
+
+		let relayResponse;
+		try {
+			relayResponse = await callRelay(ephemeralPublicKey, burnAddress);
+		} catch (relayError) {
+			const relayErrorMessage =
+			relayError instanceof Error ? relayError.message : "Unknown relay error";
+			console.error("Relay error:", relayErrorMessage);
+			transactionError = `Relay failed: ${relayErrorMessage}`;
+			onError?.(transactionError);
+			return;
+		}
+
+		// Handle relay error response
+		if (!relayResponse.success || relayResponse.error) {
+			const relayError = relayResponse.error || "Relay request failed";
+			transactionError = `Relay failed: ${relayError}`;
+			onError?.(transactionError);
+			return;
+		}
+
+		// Try to wait for receipt
+		isWaitingForReceipt = true;
+		try {
+			transactionReceipt = await waitForTransactionReceipt(txHash, 60000);
+			// Update status to confirmed
+			transactions.updateStatus(txHash, 'confirmed');
+		} catch (err) {
+			console.warn('Receipt not received within timeout, but tx was sent:', err);
+		} finally {
+			isWaitingForReceipt = false;
+		}
+	} catch (err) {
+		const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+		transactionError = errorMessage;
+		onError?.(errorMessage);
+	} finally {
+		isSending = false;
 	}
+}
 
   function handleRetry() {
     transactionHash = null;
