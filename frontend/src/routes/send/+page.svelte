@@ -23,7 +23,6 @@
   type SendStep = "search" | "amount" | "confirm" | "success";
   import { getMetakey } from "$lib/utils/metakey";
   import { getBurnAddress } from "$lib/burn";
-  import SetupSMA from "$lib/components/SetupSMA.svelte";
 
   let selectedAddress: Address | null = $state(null);
   let ensName: string | null = $state(null);

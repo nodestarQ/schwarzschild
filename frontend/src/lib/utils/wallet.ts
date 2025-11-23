@@ -183,9 +183,11 @@ export async function addressExists(input: string): Promise<boolean> {
  * @returns Formatted address string
  */
 export async function formatAddressForDisplay(
-  address: Address,
+  address: Address | null | undefined,
   showEns: boolean = true,
 ): Promise<string> {
+  if (!address) return '';
+
   try {
     if (showEns) {
       const ensName = await getEnsName(address);
