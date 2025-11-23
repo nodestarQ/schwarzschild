@@ -66,16 +66,12 @@ leanIMTPoseidon2 - [0xcbf45ce9650A8F4E51933A13857016B1A44c3d94](https://sepolia.
 StealthBurnRegistry — [0x43208AA38104d08EC099d55F709dd46E52ea619C](https://sepolia.etherscan.io/address/0x43208AA38104d08EC099d55F709dd46E52ea619C)
 
 
-## run ui
-compile
+## run ui in localhost
 
 ```shell
-yarn noir;
-yarn solidity;
-```
-
-```shell
-yarn vite website;
+cd fronted/ ;
+bun install ; 
+bun run dev ;
 ```
 
 ## Authors
