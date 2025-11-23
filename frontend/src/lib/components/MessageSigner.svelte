@@ -5,7 +5,8 @@
 </script>
 
 <script lang="ts">
-	import { connectedAccount, currentProvider, signatureResult, signMessage } from '$lib/providers'
+	import { connectedAccount, currentProvider, signatureResult } from '$lib/providers'
+	import { signMessageWithWallet } from '$lib/utils/signing'
 	import Button from '$lib/components/ui/button/button.svelte'
 	import * as Card from '$lib/components/ui/card'
 	import TextArea from '$lib/components/ui/textarea/textarea.svelte'
@@ -38,7 +39,7 @@
 		error = null
 
 		try {
-			const signature = await signMessage(message, $connectedAccount, $currentProvider)
+			const signature = await signMessageWithWallet(message, $connectedAccount, $currentProvider)
 			onSign?.(signature)
 		} catch (err) {
 			error = err instanceof Error ? err.message : 'Failed to sign message'

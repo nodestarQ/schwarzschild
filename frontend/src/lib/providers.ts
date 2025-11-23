@@ -97,7 +97,9 @@ function stringToHex(str: string): string {
 
 /**
  * Sign a message using personal_sign (EIP-191)
- * @param message - The message to sign
+ * Note: personal_sign expects a hex-encoded message parameter.
+ * The wallet implementation should decode this for display to the user.
+ * @param message - The message to sign (plain text)
  * @param account - The account to sign with
  * @param provider - The provider to use for signing
  * @returns The signed message
@@ -108,9 +110,12 @@ export const signMessage = async (
   provider: EIP1193Provider,
 ): Promise<string> => {
   try {
-    // Convert message to hex-encoded UTF-8
+    // Convert message to hex-encoded UTF-8 as per EIP-191
     const msgHex = stringToHex(message);
 
+    // Send to wallet for signing
+    // Note: Some wallets may display the hex representation if they don't 
+    // properly implement message decoding
     const signature = (await provider.request({
       method: "personal_sign",
       params: [msgHex, account],

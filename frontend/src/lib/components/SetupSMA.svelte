@@ -1,8 +1,9 @@
 <script lang="ts">
 
-import { connectedAccount, currentProvider, signMessage } from '$lib/providers'
+import { connectedAccount, currentProvider } from '$lib/providers'
+import { signMessageWithWallet, recoverSignaturePublicKey } from '$lib/utils/signing'
 import { getStealthMetaAddress } from '$lib/stealth/prepare-keys'
-import { recoverPublicKey, stringToHex, toHex, type Hex } from 'viem';
+import { toHex, type Hex } from 'viem';
 import ResolveStealthAddy from './ResolveStealthAddy.svelte';
 
 let spendingKey: string | null = null
@@ -15,7 +16,7 @@ let userPublicKey: string | null = null
 
 let isCreated = $state(false);
 
-const generateStealthMetaAddress = async (message: string = "Stealth Meta Address") => {
+const generateStealthMetaAddress = async (message: string = "Create MetaKey for Schwarzschild") => {
     if (!$connectedAccount) {
         console.error('No account connected')
         return
@@ -26,12 +27,9 @@ const generateStealthMetaAddress = async (message: string = "Stealth Meta Addres
         return
     }
 
-    const signature = await signMessage(message, $connectedAccount, $currentProvider)
+    const signature = await signMessageWithWallet(message, $connectedAccount, $currentProvider)
 
-    const publicKey = await recoverPublicKey({
-        hash: stringToHex(message),
-        signature: signature as Hex
-    })
+    const publicKey = await recoverSignaturePublicKey(message, signature as Hex)
 
     try {
         const result = await getStealthMetaAddress(toHex(signature), message)

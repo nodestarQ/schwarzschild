@@ -14,9 +14,8 @@
   } from "$lib/components/ui/alert";
   import { setMetakey } from "$lib/utils/metakey";
   import { getEnsName } from "$lib/utils/wallet";
+  import { signMessageWithWallet, recoverSignaturePublicKey } from "$lib/utils/signing";
   import {
-    recoverPublicKey,
-    stringToHex,
     toHex,
     type Address,
     type Hex,
@@ -50,17 +49,14 @@
     try {
       const message = "Create MetaKey for Schwarzschild";
 
-      const signature = await window.ethereum.request({
-        method: "personal_sign",
-        params: [message, connectedAddress],
-      });
-
-      const publicKey = await recoverPublicKey({
-        hash: stringToHex(message),
-        signature: signature as Hex,
-      });
+      // Sign the message using viem's signing function
+      const signature = await signMessageWithWallet(message, connectedAddress, $currentProvider);
 
       if (!signature) throw new Error("Failed to sign message");
+
+      // Recover the public key from the signature using viem
+      const publicKey = await recoverSignaturePublicKey(message, signature as Hex);
+
       try {
         const result = await getStealthMetaAddress(toHex(signature), message);
         const viewingPublicKey = result.viewingPublicKey;
